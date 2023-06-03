@@ -1,0 +1,41 @@
+#!/usr/bin/env sh
+
+# Developer notes
+# - 'tagger alias folder' for output alias and completion commands
+# - add '_tagger_completion name folder` for aliases completion
+
+set -e
+
+print_help() {
+    echo "tagger - simple tagging system for any types of files
+Usage:
+	tagger init name
+		create new folder structure, under name, for
+		keeping files and tags
+	tagger add folder file
+		move file to tagger in tagger folder
+	tagger tag folder file tag
+		add tag to file from tagger folder
+	tagger untag folder file tag
+		remove tag from file in tagger folder
+"
+}
+
+if [ -z "$1" ]; then
+    print_help
+    exit
+fi
+
+base_folder="$2/.base"
+
+[ "$1" = "init" ] && mkdir -p "$base_folder" && exit
+
+[ "$1" = "add" ] && mv "$3" "$base_folder" && exit
+
+[ "$1" = "tag" ] && mkdir "$2/$4" && ln -s "$base_folder/$3" "$2/$4/" && exit
+
+[ "$1" = "untag" ] && rm "$2/$4/$3" && exit
+
+echo "Unknown command: $1"
+
+
