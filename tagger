@@ -1,11 +1,15 @@
 #!/usr/bin/env sh
 
+## tagger - simple tagging system for any types of files
+
 # Developer notes
 # - 'tagger alias folder' for output alias and completion commands
 # - add '_tagger_completion name folder` for aliases completion
 # - check command for test tagger folder correctnes
 
 set -e
+
+SCRIPT="$(dirname $0)/tagger"
 
 # Error handling and checks
 err () {
@@ -64,35 +68,27 @@ pbase () {
 
 # Script logic
 
+##
+## Usage:
+##
 print_help () {
-    err "tagger - simple tagging system for any types of files
-Usage:
-	tagger init name
-		create new folder structure, under name, for
-		keeping files and tags
-	tagger add folder file
-		move file to tagger in tagger folder
-	tagger tag folder file tag
-		add tag to file from tagger folder
-	tagger untag folder file tag
-		remove tag from file in tagger folder
-	tagger ls folder
-		list all files under tagger folder
-	tagger path folder file
-		get path for tagged file"
+	awk '/^##/{print substr($0, 4);}' "$SCRIPT"
+	exit
 }
 
-## tagger init name
-##	create new folder structure, under name, for
-##	keeping files and tags
+## tagger init _name_
+## 	create new folder structure, under name, for
+## 	keeping files and tags
+##
 init_tagger () {
     check "$1" "tagger folder" pnodir
 
     mkdir -p "$base"
 }
 
-## tagger add folder file
-##	move file to tagger in tagger folder
+## tagger add _folder_ _file_
+## 	move file to tagger in tagger folder
+##
 add_file () {
     check "$1" "tagger folder" pdir pbase
     check "$2" "file" pfile
@@ -100,8 +96,9 @@ add_file () {
     mv "$2" "$base"
 }
 
-## tagger tag folder file tag
-##	add tag to file from tagger folder
+## tagger tag _folder_ _file_ _tag_
+## 	add tag to file from tagger folder
+##
 tag_file () {
     check "$1" "tagger folder" pdir pbase
     check "$2" "file" ptagged
@@ -112,8 +109,9 @@ tag_file () {
     ln -s "../.base/$2" "$tag_folder"
 }
 
-## tagger untag folder file tag
-##	remove tag from file in tagger folder
+## tagger untag _folder_ _file_ _tag_
+## 	remove tag from file in tagger folder
+##
 untag_file () {
     check "$1" "tagger folder" pdir pbase
     check "$2" "file" ptagged
@@ -123,15 +121,17 @@ untag_file () {
     rm -f "$tag_folder/$2"
 }
 
-## tagger ls folder
-##	list all files under tagger folder
+## tagger ls _folder_
+## 	list all files under tagger folder
+##
 list () {
     check "$1" "tagger folder" pdir pbase
     ls -1 "$base"
 }
 
-## tagger path folder file
-##	get path for tagged file
+## tagger path _folder_ _file_
+## 	get path for tagged file
+##
 path () {
     check "$1" "tagger folder" pdir pbase
     check "$2" "file" ptagged
