@@ -36,9 +36,9 @@ pexist () {
 	err "$2 should be specified"
 }
 
-pnodir () {
-    [ -d "$1" ] &&
-	err "$2 already exist: $1"
+pnotagger () {
+    [ -d "$base" ] &&
+	err "$2 is already contain tagger: $1"
 }
 
 pfile () {
@@ -84,7 +84,7 @@ print_help () {
 ## 	keeping files and tags
 ##
 init_tagger () {
-    check "$1" "tagger folder" pnodir
+    check "$1" "folder" pnotagger
 
     mkdir -p "$base"
 }
