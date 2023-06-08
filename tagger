@@ -9,7 +9,7 @@
 
 set -e
 
-SCRIPT="$(dirname $0)/tagger"
+SCRIPT=$(dirname "$0")/tagger
 
 # Error handling and checks
 err () {
@@ -71,13 +71,16 @@ pbase () {
 ##
 ## Usage:
 ##
+## Common pattern is:
+## 	tagger _folder_ command [arguments ...]
+## 
 print_help () {
 	awk '/^##/{print substr($0, 4);}' "$SCRIPT"
 	exit
 }
 
-## tagger init _name_
-## 	create new folder structure, under name, for
+## tagger _folder_ init
+## 	create new folder structure, for
 ## 	keeping files and tags
 ##
 init_tagger () {
@@ -86,42 +89,42 @@ init_tagger () {
     mkdir -p "$base"
 }
 
-## tagger add _folder_ _file_
+## tagger _folder_ add _file_
 ## 	move file to tagger in tagger folder
 ##
 add_file () {
     check "$1" "tagger folder" pdir pbase
-    check "$2" "file" pfile
+    check "$3" "file" pfile
 
-    mv "$2" "$base"
+    mv "$3" "$base"
 }
 
-## tagger tag _folder_ _file_ _tag_
+## tagger _folder_ tag _file_ _tag_
 ## 	add tag to file from tagger folder
 ##
 tag_file () {
     check "$1" "tagger folder" pdir pbase
-    check "$2" "file" ptagged
-    check "$3" "tag"
+    check "$3" "file" ptagged
+    check "$4" "tag"
 
-    tag_folder="$1/$3"
+    tag_folder="$1/$4"
     mkdir -p "$tag_folder"
-    ln -s "../.base/$2" "$tag_folder"
+    ln -s "../.base/$3" "$tag_folder"
 }
 
-## tagger untag _folder_ _file_ _tag_
+## tagger _folder_ untag _file_ _tag_
 ## 	remove tag from file in tagger folder
 ##
 untag_file () {
     check "$1" "tagger folder" pdir pbase
-    check "$2" "file" ptagged
-    check "$3" "tag" ptag
+    check "$3" "file" ptagged
+    check "$4" "tag" ptag
 
-    tag_folder="$1/$3"
-    rm -f "$tag_folder/$2"
+    tag_folder="$1/$4"
+    rm -f "$tag_folder/$3"
 }
 
-## tagger ls _folder_
+## tagger _folder_ ls
 ## 	list all files under tagger folder
 ##
 list () {
@@ -129,24 +132,22 @@ list () {
     ls -1 "$base"
 }
 
-## tagger path _folder_ _file_
+## tagger _folder_ path _file_
 ## 	get path for tagged file
 ##
 path () {
     check "$1" "tagger folder" pdir pbase
-    check "$2" "file" ptagged
+    check "$3" "file" ptagged
 
-    echo "$base/$2"
+    echo "$base/$3"
 }
 
 # Process arguments
 
 [ "$#" -lt 1 ] && print_help
 
-command="$1"
-shift 1
-
 base="$1/.base"
+command="$2"
 
 case "$command" in
     init)  init_tagger "$@" ;;
