@@ -25,14 +25,33 @@ check () {
     desc="$3"
 
     pexist "$value" "$desc"
-    
     shift 3
+
     for chk in "$@"
     do
         "$chk" "$value" "$desc"
     done
 
     [ -n "$name" ] && eval "$name=$value"
+}
+
+check_all () {
+    name="$1"
+    vars="$2"
+    desc="$3"
+
+    pexist "$vars" "$desc"
+    shift 3
+
+    for chk in "$@"
+    do
+        for var in $vars
+        do
+            "$chk" "$var" "$desc"
+        done
+    done
+
+    [ -n "$name" ] && eval "$name=\"$vars\""
 }
 
 pexist () {
@@ -98,9 +117,11 @@ init_tagger () {
 ##
 add_file () {
     check ""   "$1" "tagger folder" pdir pbase
-    check file "$3" file            pfile
+    #check file "$3" file            pfile
+    shift 2
+    check_all files "$*" files pfile
 
-    mv "$file" "$BASE"
+    mv "$files" "$BASE"
 }
 
 ## tagger _folder_ tag _file_ _tag_
@@ -146,6 +167,17 @@ path () {
     echo "$BASE/$file"
 }
 
+## tagger _folder_ rm _file_
+##  remove file from tagger
+##
+remove () {
+    check ""   "$1" "tagger folder" pdir pbase
+    check file "$3" file            ptagged
+
+    rm -f "$BASE"/../*/"$file"
+    rm "$BASE/$file"
+}
+
 # Process arguments
 
 SCRIPT=$(dirname "$0")/tagger
@@ -156,10 +188,11 @@ COMMAND="$2"
 
 case "$COMMAND" in
     init)  init_tagger "$@" ;;
-    add)   add_file "$@" ;;
-    tag)   tag_file "$@" ;;
-    untag) untag_file "$@" ;;
-    ls)    list "$@" ;;
-    path)  path "$@" ;;
+    add)   add_file    "$@" ;;
+    tag)   tag_file    "$@" ;;
+    untag) untag_file  "$@" ;;
+    ls)    list        "$@" ;;
+    path)  path        "$@" ;;
+    rm)    remove      "$@" ;;
     *) err "Unknown command $COMMAND" ;;
 esac

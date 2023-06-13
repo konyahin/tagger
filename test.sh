@@ -26,12 +26,16 @@ test () {
 }
 
 tmp_file () {
-    FILE=$(mktemp /tmp/tagger-test-file-XXXXXX)
-    BASENAME=$(basename "$FILE")
-}    
+    eval "FILE$1=$(mktemp /tmp/tagger-test-file-XXXXXX)"
+    eval "BASENAME$1=$(basename $FILE$1)"
+}
 
-FOLDER=$(mktemp -d /tmp/tagger-test-XXXXXX)
-LS_FOLDER="&& cd $FOLDER && find ."
+tmp_dir () {
+    FOLDER=$(mktemp -d /tmp/tagger-test-XXXXXX)
+    LS_FOLDER="&& cd $FOLDER && find ."
+}
+
+tmp_dir
 
 test "init" "./tagger $FOLDER init $LS_FOLDER" \
 ".
@@ -64,4 +68,20 @@ test "ls files" "./tagger $FOLDER ls" "$BASENAME"
 
 test "path file" "./tagger $FOLDER path $BASENAME" "$FOLDER/.base/$BASENAME"
 
+test "remove file" "./tagger $FOLDER rm $BASENAME $LS_FOLDER" \
+".
+./.base
+./a"
+
+tmp_file
+./tagger "$FOLDER" add "$FILE"
+./tagger "$FOLDER" tag "$BASENAME" test
+
+test "remove tagged file" "./tagger $FOLDER rm $BASENAME $LS_FOLDER" \
+".
+./.base
+./a
+./test"
+
+# clean up
 rm -rf "$FOLDER"
