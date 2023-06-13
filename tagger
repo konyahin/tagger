@@ -1,4 +1,6 @@
 #!/usr/bin/env sh
+# disable warnings about variables are declared indirectly
+# shellcheck disable=SC2154
 
 ## tagger - simple tagging system for any types of files
 
@@ -6,10 +8,10 @@
 # - 'tagger alias folder' for output alias and completion commands
 # - add '_tagger_completion name folder` for aliases completion
 # - check command for test tagger folder correctnes
+# - you can make completition as separate task, maybe?
+#   so you can get arguments and decide wath to complete
 
 set -e
-
-SCRIPT=$(dirname "$0")/tagger
 
 # Error handling and checks
 err () {
@@ -19,16 +21,18 @@ err () {
 
 check () {
     name="$1"
-    desc="$2"
+    value="$2"
+    desc="$3"
 
-    pexist "$name" "$desc"
+    pexist "$value" "$desc"
     
-    shift 2
+    shift 3
     for chk in "$@"
     do
-	"$chk" "$name" "$desc"
+        "$chk" "$value" "$desc"
     done
-		 
+
+    [ -n "$name" ] && eval "$name=$value"
 }
 
 pexist () {
@@ -37,7 +41,7 @@ pexist () {
 }
 
 pnotagger () {
-    [ -d "$base" ] &&
+    [ -d "$BASE" ] &&
 	err "$2 is already contain tagger: $1"
 }
 
@@ -52,17 +56,17 @@ pdir () {
 }
 
 ptagged () {
-    [ ! -f "$base/$1" ] &&
+    [ ! -f "$BASE/$1" ] &&
 	err "$2 should be added before: $1"
 }
 
 ptag () {
-    [ ! -d "$base/../$1" ] &&
+    [ ! -d "$BASE/../$1" ] &&
 	  err "$2 should exist: $1"
 }
 
 pbase () {
-    [ ! -d "$base" ] &&
+    [ ! -d "$BASE" ] &&
 	err "$2 should be initialized by tagger: $1"
 }
 
@@ -84,77 +88,78 @@ print_help () {
 ## 	keeping files and tags
 ##
 init_tagger () {
-    check "$1" "folder" pnotagger
+    check "" "$1" folder pnotagger
 
-    mkdir -p "$base"
+    mkdir -p "$BASE"
 }
 
-## tagger _folder_ add _file_
+## tagger _folder_ add [_file_ ...]
 ## 	move file to tagger in tagger folder
 ##
 add_file () {
-    check "$1" "tagger folder" pdir pbase
-    check "$3" "file" pfile
+    check ""   "$1" "tagger folder" pdir pbase
+    check file "$3" file            pfile
 
-    mv "$3" "$base"
+    mv "$file" "$BASE"
 }
 
 ## tagger _folder_ tag _file_ _tag_
 ## 	add tag to file from tagger folder
 ##
 tag_file () {
-    check "$1" "tagger folder" pdir pbase
-    check "$3" "file" ptagged
-    check "$4" "tag"
+    check folder "$1" "tagger folder" pdir pbase
+    check file   "$3" file            ptagged
+    check tag    "$4" tag
 
-    tag_folder="$1/$4"
+    tag_folder="$folder/$tag"
     mkdir -p "$tag_folder"
-    ln -s "../.base/$3" "$tag_folder"
+    ln -s "../.base/$file" "$tag_folder"
 }
 
 ## tagger _folder_ untag _file_ _tag_
 ## 	remove tag from file in tagger folder
 ##
 untag_file () {
-    check "$1" "tagger folder" pdir pbase
-    check "$3" "file" ptagged
-    check "$4" "tag" ptag
+    check folder "$1" "tagger folder" pdir pbase
+    check file   "$3" file            ptagged
+    check tag    "$4" tag             ptag
 
-    tag_folder="$1/$4"
-    rm -f "$tag_folder/$3"
+    tag_folder="$folder/$tag"
+    rm -f "$tag_folder/$file"
 }
 
 ## tagger _folder_ ls
 ## 	list all files under tagger folder
 ##
 list () {
-    check "$1" "tagger folder" pdir pbase
-    ls -1 "$base"
+    check "" "$1" "tagger folder" pdir pbase
+    ls -1 "$BASE"
 }
 
 ## tagger _folder_ path _file_
 ## 	get path for tagged file
 ##
 path () {
-    check "$1" "tagger folder" pdir pbase
-    check "$3" "file" ptagged
+    check ""   "$1" "tagger folder" pdir pbase
+    check file "$3" file            ptagged
 
-    echo "$base/$3"
+    echo "$BASE/$file"
 }
 
 # Process arguments
 
-[ "$#" -lt 1 ] && print_help
+SCRIPT=$(dirname "$0")/tagger
+[ "$#" -lt 2 ] && print_help
 
-base="$1/.base"
-command="$2"
+BASE="$1/.base"
+COMMAND="$2"
 
-case "$command" in
+case "$COMMAND" in
     init)  init_tagger "$@" ;;
     add)   add_file "$@" ;;
     tag)   tag_file "$@" ;;
     untag) untag_file "$@" ;;
     ls)    list "$@" ;;
     path)  path "$@" ;;
-    *) err "Unknown command $command" ;;
+    *) err "Unknown command $COMMAND" ;;
 esac

@@ -1,22 +1,23 @@
 #!/usr/bin/env sh
 
 # no color
-NC='\033[0m'
 if [ -z "$NOCOLOR" ]; then
 	RED='\033[0;31m'
 	GREEN='\033[0;32m'
+    NC='\033[0m'
 else
     RED=""
     GREEN=""
+    NC=""
 fi
 
 test () {
-    OUTPUT=$(eval "$2")
+    OUTPUT=$(eval "$2" 2>&1)
     EXPECT="$3"
     if [ "$OUTPUT" = "$EXPECT" ]; then
-        echo "TEST: $1 ${GREEN}PASSED${NC}"
+        printf "TEST: %-20.20s ${GREEN}PASSED${NC}\n" "$1"
     else
-        echo "TEST: $1 ${RED}FAILED${NC}"
+        printf "TEST: %-20.20s ${RED}FAILED${NC}\n" "$1"
         echo "EXPECTED:"
 	echo "$EXPECT"
         echo "GOT:"
@@ -36,8 +37,11 @@ test "init" "./tagger $FOLDER init $LS_FOLDER" \
 ".
 ./.base"
 
+test "init: already exist" "./tagger $FOLDER init" \
+"folder is already contain tagger: $FOLDER"
+
 tmp_file
-test "add one file" "./tagger $FOLDER add $FILE $LS_FOLDER" \
+test "add file" "./tagger $FOLDER add $FILE $LS_FOLDER" \
 ".
 ./.base
 ./.base/$BASENAME"
